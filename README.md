@@ -27,7 +27,7 @@ To view logs through the Azure portal, hop on to the log analytic workspace and 
 Build application image
 ------------------------
 
-Build image using ACR tasks:
+Build app image using ACR tasks:
 
 	ACR_NAME="{ACR registry name}"
 	IMAGE_NAME="printenv"
