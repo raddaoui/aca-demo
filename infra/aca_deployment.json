@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "containerappName": {
+          "defaultValue": "aca-printenv-app",
+          "type": "String"
+      },
+      "location": {
+          "defaultValue": "eastus",
+          "type": "String"
+      },
+      "environment_name": {
+          "defaultValue": "aca-env",
+          "type": "String"
+      },
+      "acr_password": {
+          "type": "String"
+      }
+  },
+  "variables": {},
+  "resources": [
+      {
+          "apiVersion": "2021-03-01",
+          "type": "Microsoft.Web/containerApps",
+          "name": "[parameters('containerappName')]",
+          "location": "[parameters('location')]",
+          "properties": {
+              "kubeEnvironmentId": "[resourceId('Microsoft.Web/kubeEnvironments', parameters('environment_name'))]",
+              "configuration": {
+                  "secrets": [
+                      {
+                          "name": "my-acr-password",
+                          "value": "[parameters('acr_password')]"
+                      },
+                      {
+                          "name": "my-app-secret",
+                          "value": "supersensitivesecret"
+                      }  
+                  ],
+                  "ingress": {
+                      "external": true,
+                      "targetPort": 80,
+                      "allowInsecure": false,
+                      "traffic": [
+                          {
+                              "latestRevision": true,
+                              "weight": 100
+                          }
+                      ]
+                  },
+                  "registries": [{
+                    "server": "alaacr270.azurecr.io",
+                    "username": "alaacr270",
+                    "passwordSecretRef": "my-acr-password"
+                  }]
+              },
+              "template": {
+                  "revisionSuffix": "myrevision",
+                  "containers": [
+                      {
+                          "name": "printenv",
+                          "image": "alaacr270.azurecr.io/printenv:v2",
+                          "env": [
+                              {
+                                  "name": "HTTP_PORT",
+                                  "value": "80"
+                              },
+                              {
+                                  "name": "SECRET_VAL",
+                                  "secretRef": "my-app-secret"
+                              }
+                          ],
+                          "resources": {
+                              "cpu": 0.5,
+                              "memory": "1Gi"
+                          }
+                      }
+                  ],
+                  "scale": {
+                      "minReplicas": 0,
+                      "maxReplicas": 10,
+                      "rules": [{
+                        "name": "http-rule",
+                        "http": {
+                          "metadata": {
+                            "concurrentRequests": "5"
+                          }
+                        }
+                      }]
+                    }
+              }
+          }
+      }
+  ]
+}
