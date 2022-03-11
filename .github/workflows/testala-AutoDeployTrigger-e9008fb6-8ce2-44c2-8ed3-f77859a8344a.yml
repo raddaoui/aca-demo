@@ -6,8 +6,8 @@ on:
   push:
     branches: 
       [ main ]
-    #paths:
-    #- './**'
+    paths:
+    - 'src/**'
 
   # Allow mannually trigger 
   workflow_dispatch:      
