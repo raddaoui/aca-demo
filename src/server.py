@@ -14,7 +14,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(bytes("<html><head><title>debug me</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p><b>Hello ACA!.</b></p>", "utf-8"))
+        self.wfile.write(bytes("<p><b>Hello Container Apps!.</b></p>", "utf-8"))
         self.wfile.write(bytes("<p><b>Hostname:</b> %s</p>" % socket.gethostname(), "utf-8"))
         environ = ""
         for item, value in os.environ.items():
