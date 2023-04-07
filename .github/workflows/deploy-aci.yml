@@ -7,9 +7,11 @@ on:
   workflow_dispatch:
 
 env:
-  ACR_REGISTRY: acrlzaacademo.azurecr.io
+  ACR_REGISTRY_NAME: acrlzaacademo
   IMAGE_NAME: echoserver
-
+  SCAN_EXTRACTION_RETRY_COUNT: 45 # we set this to 45 so that we retry to get vulnerability assessment for about 15 mins (script will retry 45* 20seconds)
+  # From link https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-containers-vulnerability-assessment-azure
+  # "When a scan is triggered, findings are available as Defender for Cloud recommendations from 2 minutes up to 15 minutes after the scan is complete."
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -21,7 +23,7 @@ jobs:
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
-        login-server: ${{ env.ACR_REGISTRY }}
+        login-server: ${{ env.ACR_REGISTRY_NAME }}.azurecr.io
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
@@ -30,7 +32,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        tags: ${{ env.ACR_REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
   image-scan-gate:
     runs-on: ubuntu-latest
     needs:
@@ -45,4 +47,4 @@ jobs:
     - name: Run Image Scan Security Gate
       shell: pwsh
       run: |
-        ./ImageScanSummaryAssessmentGate.ps1 -registryName ${{ env.ACR_REGISTRY }} -repository ${{ env.IMAGE_NAME }} -tag ${{ github.sha }}
+        ./ImageScanSummaryAssessmentGate.ps1 -scanExtractionRetryCount ${{ env.SCAN_EXTRACTION_RETRY_COUNT }} -registryName ${{ env.ACR_REGISTRY_NAME }} -repository ${{ env.IMAGE_NAME }} -tag ${{ github.sha }}
