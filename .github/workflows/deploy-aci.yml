@@ -36,17 +36,13 @@ jobs:
     needs:
       - build-and-push
     steps:
-    - name: Set up PowerShell Core
-      uses: actions/setup-powershell@v1
-      with:
-        pwsh-version: '7.0'
+    - name: Checkout code
+      uses: actions/checkout@v2
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Run Image Scan Security Gate
-      uses: azure/cli@v1
-      with:
-        azcliversion: 2.22.1
-        inlineScript: |
-          pwsh -File ./ImageScanSummaryAssessmentGate.ps1 -registryName ${{ env.ACR_REGISTRY }} -repository ${{ env.IMAGE_NAME }} -tag ${{ github.sha }}
+      shell: pwsh
+      run: |
+        ./ImageScanSummaryAssessmentGate.ps1 -registryName ${{ env.ACR_REGISTRY }} -repository ${{ env.IMAGE_NAME }} -tag ${{ github.sha }}
